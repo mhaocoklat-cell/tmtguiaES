@@ -102,7 +102,7 @@
     </div>
 
 <script>
-    const apiKey = ""; 
+    const apiKey = "GEMINI_API_KEY"; 
 
     function checkHosting() {
         if (window.location.protocol === 'file:') {
