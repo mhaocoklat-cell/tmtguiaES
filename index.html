@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulso TMT - Navegador de Decisiones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #0d0d0d;
+            color: #ffffff;
+            padding: 20px;
+        }
+        .container-pulso {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #0f0f0f;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.4);
+            border: 3px solid #ff0055;
+        }
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #00ffaa;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 0 8px rgba(0, 255, 170, 0.5);
+        }
+        .subtitle {
+            text-align: center;
+            color: #ddd;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .gemini-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #ff0055;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-size: 1.1rem;
+            resize: none;
+            height: 150px;
+        }
+        .gemini-button {
+            background-color: #00ffaa;
+            color: #0f0f0f;
+            font-weight: 800;
+            padding: 15px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            border: none;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 1.2rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .gemini-button:hover {
+            background-color: #00e099;
+        }
+        .gemini-output {
+            background-color: #1f1f1f;
+            padding: 25px;
+            border-radius: 8px;
+            border-top: 5px solid #ff0055;
+            min-height: 100px;
+            font-size: 1.1rem;
+            color: #ddd;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            margin-top: 25px;
+        }
+        .loading {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #00ffaa;
+        }
+    </style>
+</head>
+<body onload="checkHosting()">
+    <div class="container-pulso">
+        <h1 class="uppercase">Navegador de Decisiones</h1>
+        <p class="subtitle">¿Quién tiene el control? Usa el Fruto del Espíritu para guiar tu semana.</p>
+        
+        <textarea id="scenarioInput" class="gemini-input" placeholder="Escribe aquí tu desafío (Ej: Mis amigos quieren que mienta para salir. ¿Cómo actúo con Fe o Dominio Propio?)" required></textarea>
+        
+        <button class="gemini-button" onclick="getSpiritualGuidance()">
+            <i class="fa-solid fa-compass"></i> RECIBIR GUÍA DEL ESPÍRITU
+        </button>
+        
+        <div id="guidanceOutput" class="gemini-output">
+            Esperando tu escenario... ¡Recuerda que Él te guiará con Su amor!
+        </div>
+    </div>
+
+<script>
+    const apiKey = "GEMINI_API_KEY"; 
+
+    function checkHosting() {
+        if (window.location.protocol === 'file:') {
+            document.getElementById('guidanceOutput').innerHTML = '<span style="color: #ff0055;">¡ATENCIÓN!</span> Este archivo debe estar <b>alojado en un servidor web</b> (subido a internet, no abierto localmente). Si lo ves así, sube el archivo a GitHub Pages o algún hosting público.';
+            document.getElementById('scenarioInput').disabled = true;
+            document.querySelector('.gemini-button').disabled = true;
+        }
+    }
+
+    async function getSpiritualGuidance() {
+        const userScenario = document.getElementById('scenarioInput').value.trim();
+        const outputElement = document.getElementById('guidanceOutput');
+        
+        if (!userScenario) {
+            outputElement.innerHTML = 'Por favor, escribe un escenario o un desafío para recibir guía.';
+            return;
+        }
+
+        outputElement.innerHTML = '<div class="loading"><i class="fa-solid fa-spinner fa-spin"></i> Buscando la guía en Su Palabra...</div>';
+        
+        const systemPrompt = `Actúa como un mentor cristiano juvenil (para un joven de 14 años), sabio y accesible. Analiza el escenario dado y responde de manera concisa (máximo 4 frases) y bíblica.`;
+        const userQuery = `Mi desafío es: "${userScenario}". ¿Cómo me guiaría el Espíritu Santo en esta situación?`;
+
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            systemInstruction: {
+                parts: [{ text: systemPrompt }]
+            },
+        };
+
+        let response;
+        let retries = 0;
+        const maxRetries = 5;
+        let delay = 1000; 
+
+        while (retries < maxRetries) {
+            try {
+                response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    break; 
+                } else if (response.status === 429) {
+                    retries++;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2; 
+                } else {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+            } catch (error) {
+                retries++;
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2; 
+                if (retries === maxRetries) {
+                    outputElement.innerHTML = `Error: No se pudo conectar con el Navegador de Decisiones. Intenta de nuevo.`;
+                    return;
+                }
+            }
+        }
+        
+        try {
+            const result = await response.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (text) {
+                outputElement.innerHTML = text;
+            } else {
+                outputElement.innerHTML = 'Error al generar la guía. Intenta con un escenario diferente.';
+            }
+        } catch (error) {
+            outputElement.innerHTML = 'Error al procesar la respuesta. Verifica tu conexión.';
+        }
+    }
+</script>
+
+</body>
+</html>
