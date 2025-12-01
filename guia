@@ -93,7 +93,7 @@
         <textarea id="scenarioInput" class="gemini-input" placeholder="Escribe aquí tu desafío (Ej: Mis amigos quieren que mienta para salir. ¿Cómo actúo con Fe o Dominio Propio?)" required></textarea>
         
         <button class="gemini-button" onclick="getSpiritualGuidance()">
-            <i class="fa-solid fa-compass"></i> RECIBIR GUÍA DEL ESPÍRITU
+            <i class="fa-solid fa-compass"></i> RECIBE UNA PALABRA PARA ESTE MOMENTO
         </button>
         
         <div id="guidanceOutput" class="gemini-output">
